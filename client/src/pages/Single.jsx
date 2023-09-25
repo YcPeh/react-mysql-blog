@@ -1,53 +1,78 @@
+import { useNavigate } from "react-router-dom";
 import Edit from "../img/edit.png";
 import Delete from "../img/delete.png";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import Menu from "../components/Menu";
+import { useContext, useEffect, useState } from "react";
+import axios from "axios";
+import moment from "moment";
+import { AuthContext } from "../context/authContext";
+import DOMPurify from "dompurify";
 
 const Single = () => {
+  const [post, setPost] = useState({});
+  // console.log("post", post);
+
+  const navigate = useNavigate();
+  const location = useLocation();
+  console.log("location", location);
+  const postId = location.pathname.split("/")[2];
+
+  const { currentUser } = useContext(AuthContext);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await axios.get(`/api/posts/${postId}`);
+        console.log("res", res);
+        setPost(res.data);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    fetchData();
+  }, [postId]);
+
+  const handleDelete = async () => {
+    try {
+      await axios.delete(`/api/posts/${postId}`);
+      navigate("/");
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   return (
     <div className="single">
       <div className="content">
-        <img
-          src="https://images.pexels.com/photos/6157049/pexels-photo-6157049.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
-          alt=""
-        />
+        <img src={`../uploads/${post?.img}`} alt="" />
         <div className="user">
-          <img
-            src="https://images.pexels.com/photos/6157049/pexels-photo-6157049.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
-            alt=""
-          />
+          {post.userImg && <img src={post?.userImg} alt="" />}
           <div className="info">
-            <span>John</span>
-            <p>Posted 2 days ago</p>
+            {/* {console.log("post.username", post.username)} */}
+            <span>{post.username}</span>
+            <p>Posted {moment(post.date).fromNow()}</p>
           </div>
-          <div className="edit">
-            <Link to={`/write?edit=2`}>
-              <img src={Edit} alt="" />
-            </Link>
-            <img src={Delete} alt="" />
-          </div>
+          {console.log("currentUser", currentUser)}
+          {console.log("post", post)}
+          {currentUser.username === post.username && (
+            <div className="edit">
+              <Link to={`/write?edit=2`} state={post}>
+                <img src={Edit} alt="" />
+              </Link>
+              <img onClick={handleDelete} src={Delete} alt="" />
+            </div>
+          )}
         </div>
-        <h1>Lorem ipsum dolor sit amet consectetur adipisicing elit.</h1>
-        <p>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Unde quos sit
-          aliquam nostrum consequatur quasi molestiae earum quam reiciendis,
-          iure omnis ipsa obcaecati officiis nulla harum, provident dolor, vel
-          dolorem laudantium quis.
-          <br />
-          <br />
-          <p>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Expedita
-            aspernatur id excepturi dignissimos porro blanditiis ipsa cumque
-            enim temporibus animi omnis, voluptatem iure dolor placeat. Autem
-            nam minus laboriosam laborum repellendus beatae consequatur quam
-            itaque? Magnam accusantium sunt error quod. Molestiae vitae aperiam
-            ad enim! Tempora, perferendis sunt nihil qui quos vitae modi eius
-            voluptas recusandae tenetur voluptate! Maxime voluptates dolorem
-            esse voluptate. Atque.
-          </p>
-        </p>
+        {console.log("post.title", post.title)}
+        <h1>{post.title}</h1>
+        <p
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(post.desc),
+          }}
+        ></p>
       </div>
-      <Menu />
+      <Menu cat={post.cat} />
     </div>
   );
 };

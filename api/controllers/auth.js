@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 export const register = (req, res) => {
-  console.log("here");
+  // console.log("here");
   // check existing user
   const q = "SELECT * FROM users WHERE email = ? OR username = ?";
 
@@ -45,7 +45,7 @@ export const login = (req, res) => {
     const token = jwt.sign({ id: data[0].id }, "jwtkey");
     const { password, ...other } = data[0];
 
-    console.log("other", other);
+    // console.log("other", other);
     res
       .cookie("access_token", token, {
         httpOnly: true,
